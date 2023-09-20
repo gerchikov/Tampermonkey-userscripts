@@ -1,12 +1,15 @@
 // ==UserScript==
-// @name         NYT/Reuters newsletter fixer
-// @version      0.1
-// @description  remove tracking cruft from NYT and Reuters newsletter urls
+// @name         newsletter fixer
+// @version      0.2.0
+// @description  remove tracking cruft from NYT et al newsletter urls in Gmail
 // @author       YDG
+// @namespace    https://github.com/gerchikov
 // @match        *://mail.google.com/mail/*
+// @grant        none
+// @updateURL    https://github.com/gerchikov/Tampermonkey-userscripts/raw/main/newsletter-fixer.user.js
+// @downloadURL  https://github.com/gerchikov/Tampermonkey-userscripts/raw/main/newsletter-fixer.user.js
+// @supportURL   https://github.com/gerchikov/Tampermonkey-userscripts/issues
 // ==/UserScript==
-
-// TODO: put me on GitHub + add update URL?
 
 const config = [{ search_href: /https:\/\/nl.nytimes.com\/f\/.*\/(.*)/i, transform_function: base64decode },
                 { search_href: /https:\/\/newslink.reuters.com\/click\/.*\/(.*)\/.*(\/email)?/i, transform_function: base64decode },
@@ -17,7 +20,7 @@ function base64decode(matched) {
     return atob(matched[1].replaceAll('-', '+').replaceAll('_', '/').replaceAll('~', '=')).match(/https?:\/\/[^?]*/i)[0];
 }
 
-(function() {
+(() => {
     'use strict';
 
     function replace_hrefs(message) {
