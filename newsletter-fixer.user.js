@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         newsletter fixer
-// @version      0.2.0
+// @version      0.3.0
 // @description  remove tracking cruft from NYT et al newsletter urls in Gmail
 // @author       YDG
 // @namespace    https://github.com/gerchikov
@@ -11,13 +11,17 @@
 // @supportURL   https://github.com/gerchikov/Tampermonkey-userscripts/issues
 // ==/UserScript==
 
-const config = [{ search_href: /https:\/\/nl.nytimes.com\/f\/.*\/(.*)/i, transform_function: base64decode },
-                { search_href: /https:\/\/newslink.reuters.com\/click\/.*\/(.*)\/.*(\/email)?/i, transform_function: base64decode },
-                { search_href: /https:\/\/link.popsci.com\/click\/[^\/]*\/([^\/]*)/i, transform_function: base64decode },
+const config = [{ search_href: /https:\/\/nl\.nytimes\.com\/f\/.*\/(.*)/i, transform_function: base64_url_extract },
+                { search_href: /https:\/\/newslink\.reuters\.com\/click\/.*\/(.*)\/.*(\/email)?/i, transform_function: base64_url_extract },
+                { search_href: /https:\/\/link\.popsci\.com\/click\/[^\/]*\/([^\/]*)/i, transform_function: base64_url_extract },
+                { search_href: /e\.email\.forbes\.com\/c2\/.*jwtP=([^&]*)/, transform_function: jwt_url_extract },
                ];
 
-function base64decode(matched) {
-    return atob(matched[1].replaceAll('-', '+').replaceAll('_', '/').replaceAll('~', '=')).match(/https?:\/\/[^?]*/i)[0];
+function base64decode(a) { return atob(a.replaceAll('-', '+').replaceAll('_', '/').replaceAll('~', '=')); }
+function url_extract(b) { return b.match(/https?:\/\/[^?]*/i)[0]; }
+
+function base64_url_extract(matched) { return url_extract(base64decode(matched[1])); }
+function jwt_url_extract(matched) { return url_extract(JSON.parse(base64decode(matched[1])).linkUrl);
 }
 
 (() => {
