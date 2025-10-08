@@ -8,4 +8,9 @@ Remove tracking cruft from NYT, Reuters et al newsletters in Gmail.
 
 [Install](https://github.com/gerchikov/Tampermonkey-userscripts/raw/main/newsletter-fixer.user.js).
 
+## Baker's Game Assistant
+Invoke online solver for the current board.
+
+[Install](https://github.com/gerchikov/Tampermonkey-userscripts/raw/main/bakers-game-assistant.user.js).
+
 ## ...
