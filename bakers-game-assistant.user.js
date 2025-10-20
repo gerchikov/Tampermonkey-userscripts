@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Baker's Game Assistant
-// @version      2025-10-20.1
+// @version      2025-10-20.2
 // @description  Invoke https://fc-solve.shlomifish.org/js-fc-solve/text/ for the current board
 // @match        *://www.free-freecell-solitaire.com/bakers_game.html
 // @author       YDG
