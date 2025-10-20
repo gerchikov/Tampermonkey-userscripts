@@ -1,14 +1,15 @@
 // ==UserScript==
 // @name         Baker's Game Assistant
-// @version      2025-10-08
+// @version      2025-10-20.1
 // @description  Invoke https://fc-solve.shlomifish.org/js-fc-solve/text/ for the current board
 // @match        *://www.free-freecell-solitaire.com/bakers_game.html
 // @author       YDG
 // @namespace    https://github.com/gerchikov
-// @grant        none
 // @updateURL    https://github.com/gerchikov/Tampermonkey-userscripts/raw/main/bakers-game-assistant.user.js
 // @downloadURL  https://github.com/gerchikov/Tampermonkey-userscripts/raw/main/bakers-game-assistant.user.js
 // @supportURL   https://github.com/gerchikov/Tampermonkey-userscripts/issues
+// @grant        GM_setClipboard
+// @grant        GM_openInTab
 // ==/UserScript==
 
 (function() {
@@ -41,9 +42,12 @@ AH TH 4S KS 8D QH TC
 
     const textToCopy = ["Freecells: " + freecells, "Foundations: " + foundations, tableau].join('\n');
 
-    navigator.clipboard.writeText(textToCopy).catch(
-        err => console.error("Failed to copy: " + err)
-    );
+    // This requires permission:
+    // navigator.clipboard.writeText(textToCopy).catch(
+    //     err => console.error("Failed to copy: " + err)
+    // );
+    // This does not!
+    GM_setClipboard(textToCopy, "text");
 
     // also, attempt to open solver in new tab:
     const href = "https://fc-solve.shlomifish.org/js-fc-solve/text/?deal_number="
@@ -51,7 +55,9 @@ AH TH 4S KS 8D QH TC
     + "&num_freecells=default&one_based=1&preset=lg&stdin="
     + encodeURIComponent(textToCopy) + "&string_params=--empty-stacks-filled-by%20kings";
     // this will likely be blocked by the browser -- look for "pop-up blocked ..." in address line:
-    window.open(href, "_blank", "noopener,noreferrer");
+    // window.open(href, "_blank", "noopener,noreferrer");
+    // This is not blocked:
+    GM_openInTab(href, {"active": true, "setParent": true});
 
     return;
 
