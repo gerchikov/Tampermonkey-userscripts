@@ -13,4 +13,9 @@ Invoke online solver for the current board.
 
 [Install](https://github.com/gerchikov/Tampermonkey-userscripts/raw/main/bakers-game-assistant.user.js).
 
+## Personal Capital Helper
+Scrape holdings from Empower / Personal Capital Dashboard to spreadsheet-friendly CSV.
+
+[Install](https://github.com/gerchikov/Tampermonkey-userscripts/raw/main/pc_json.user.js).
+
 ## ...
