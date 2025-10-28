@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         pc_json
 // @namespace    https://github.com/gerchikov
-// @version      2025-10-21
+// @version      2025-10-27
 // @description  Empower / Personal Capital: holdings --> CSV
 // @author       YDG
 // @match        https://home.personalcapital.com/page/login/app
+// @match        https://ira.empower-retirement.com/dashboard/
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=personalcapital.com
 // @updateURL    https://github.com/gerchikov/Tampermonkey-userscripts/raw/main/pc_json.user.js
 // @downloadURL  https://github.com/gerchikov/Tampermonkey-userscripts/raw/main/pc_json.user.js
@@ -33,7 +34,15 @@
             return;
         }
 
-        const response = await fetch("https://home.personalcapital.com/api/invest/getHoldings", {
+        const host =
+              location.host === "home.personalcapital.com" ? "https://home.personalcapital.com/api/invest/getHoldings" :
+              location.host === "ira.empower-retirement.com" ? "https://pc-api.empower-retirement.com/api/invest/getHoldings" : "";
+        if (!host) {
+            alert("ERROR: Unknown host");
+            return;
+        }
+
+        const response = await fetch(host, {
             "headers": {
                 "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
             },
