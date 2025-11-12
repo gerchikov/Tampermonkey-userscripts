@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Baker's Game Assistant
-// @version      2025-11-10
+// @version      2025-11-11
 // @description  Invoke https://fc-solve.shlomifish.org/js-fc-solve/text/ for the current board
 // @match        *://www.free-freecell-solitaire.com/bakers_game.html
 // @author       YDG
@@ -52,7 +52,7 @@ AH TH 4S KS 8D QH TC
     // also, attempt to open solver in new tab:
     const href = "https://fc-solve.shlomifish.org/js-fc-solve/text/?deal_number="
     + gameNumber + "&game_type=bakers_game&num_columns=default"
-    + "&num_freecells=default&one_based=1&stdin="
+    + "&num_freecells=default&one_based=1&preset=default&stdin="
     + encodeURIComponent(textToCopy) + "&string_params=--empty-stacks-filled-by%20kings";
     // this will likely be blocked by the browser -- look for "pop-up blocked ..." in address line:
     // window.open(href, "_blank", "noopener,noreferrer");
