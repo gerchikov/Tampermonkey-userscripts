@@ -1,8 +1,9 @@
 // ==UserScript==
 // @name         Baker's Game Assistant
-// @version      2025-11-11
+// @version      2026-05-28
 // @description  Invoke https://fc-solve.shlomifish.org/js-fc-solve/text/ for the current board
 // @match        *://www.free-freecell-solitaire.com/bakers_game.html
+// @match        *://fc-solve.shlomifish.org/js-fc-solve/text/?deal_number=*
 // @author       YDG
 // @namespace    https://github.com/gerchikov
 // @updateURL    https://github.com/gerchikov/Tampermonkey-userscripts/raw/main/bakers-game-assistant.user.js
@@ -10,25 +11,57 @@
 // @supportURL   https://github.com/gerchikov/Tampermonkey-userscripts/issues
 // @grant        GM_setClipboard
 // @grant        GM_openInTab
+// @grant        window.close
+// @grant        window.focus
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    const key = "treecardgames.solitaire.freecell.bakersgame.lastGame";
-    const val = localStorage.getItem(key);
-    if (!val) {
-        console.error("Error reading " + key + " from localStorage");
-        return null;
+    // are we in solver (or in game)?
+    const solver_href = "https://fc-solve.shlomifish.org/js-fc-solve/text/?deal_number=";
+    if (location.href.startsWith(solver_href)) {
+        run_solver();
+    } else {
+        document.querySelector('button.start-new').addEventListener('click', () => {
+            setTimeout(
+                // () => start_solver()  // TODO: this solver don't have the game in localStorage yet. Force refresh instead?
+                () => location.reload()
+                , 2000);
+        });
+        start_solver();
     }
-    console.debug(val);
 
-    const game = JSON.parse(val);
-    const gameNumber = game.game.gameNumber;
-    const containers = game.game.containers;
-    console.debug(containers);
+    function run_solver() {
+        // 1. click Solve (once available!)
+        const poll = setInterval(() => {
+            const btn = document.getElementById("run_do_solve");
+            try {
+                btn.onclick();
+                clearInterval(poll);
+                // 2. if unsolvable, close the solver tab (will re-activate game)
+                if (document.getElementById("fc_solve_status").className !== 'solved') {
+                    window.close();
+                }
+            } catch {}
+        }, 100);
+    }
 
-    /* 16 containers in game are: 4 freecells, 4 foundations and 8 tableau
+    function start_solver() {
+        const key = "treecardgames.solitaire.freecell.bakersgame.lastGame";
+        const val = localStorage.getItem(key);
+        if (!val) {
+            console.error("Error reading " + key + " from localStorage");
+            return null;
+        }
+        console.debug(val);
+
+        const game = JSON.parse(val);
+        const gameNumber = game.game.gameNumber;
+        const containers = game.game.containers;
+        console.debug(containers);
+
+        /* 16 containers in game are: 4 freecells, 4 foundations and 8 tableau
        Format text input for solver as follows:
 Freecells: - - - 6C
 Foundations: S-3 D-A
@@ -36,30 +69,31 @@ AH TH 4S KS 8D QH TC
 6H 2H 3D JD KD 7D 5S
     */
 
-    const freecells = containers.slice(0, 4).map(cardList).map(c => c || '-').join(' ');
-    const foundations = containers.slice(4, 8).map(cardList).filter(Boolean).map(c => c.at(-1) + '-' + c.at(-2)).join(' ');
-    const tableau = containers.slice(8, 16).map(cardList).join("\n");
+        const freecells = containers.slice(0, 4).map(cardList).map(c => c || '-').join(' ');
+        const foundations = containers.slice(4, 8).map(cardList).filter(Boolean).map(c => c.at(-1) + '-' + c.at(-2)).join(' ');
+        const tableau = containers.slice(8, 16).map(cardList).join("\n");
 
-    const textToCopy = ["Freecells: " + freecells, "Foundations: " + foundations, tableau].join('\n');
+        const textToCopy = ["Freecells: " + freecells, "Foundations: " + foundations, tableau].join('\n');
 
-    // This requires permission:
-    // navigator.clipboard.writeText(textToCopy).catch(
-    //     err => console.error("Failed to copy: " + err)
-    // );
-    // This does not!
-    GM_setClipboard(textToCopy, "text");
+        // This requires permission:
+        // navigator.clipboard.writeText(textToCopy).catch(
+        //     err => console.error("Failed to copy: " + err)
+        // );
+        // This does not:
+        GM_setClipboard(textToCopy, "text");
 
-    // also, attempt to open solver in new tab:
-    const href = "https://fc-solve.shlomifish.org/js-fc-solve/text/?deal_number="
-    + gameNumber + "&game_type=bakers_game&num_columns=default"
-    + "&num_freecells=default&one_based=1&preset=default&stdin="
-    + encodeURIComponent(textToCopy) + "&string_params=--empty-stacks-filled-by%20kings";
-    // this will likely be blocked by the browser -- look for "pop-up blocked ..." in address line:
-    // window.open(href, "_blank", "noopener,noreferrer");
-    // This is not blocked:
-    GM_openInTab(href, {"active": true, "setParent": true});
-
-    return;
+        // also, attempt to open solver in new tab:
+        const href = solver_href
+        + gameNumber + "&game_type=bakers_game&num_columns=default"
+        + "&num_freecells=default&one_based=1&preset=default&stdin="
+        + encodeURIComponent(textToCopy) + "&string_params=--empty-stacks-filled-by%20kings";
+        // this will likely be blocked by the browser -- look for "pop-up blocked ..." in address line:
+        // window.open(href, "_blank", "noopener,noreferrer");
+        // This is not blocked:
+        const solver = GM_openInTab(href, {"active": true, "setParent": true});
+        // solver tab will close if unsolvable. If so, force the game tab active:
+        solver.onclose = window.focus;
+    }
 
     // Convert 0-based card index (as in game) to short 2-character card code (as in solver):
     function cardName(index) {
