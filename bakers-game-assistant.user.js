@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Baker's Game Assistant
-// @version      2026-05-28
+// @version      2026-06-13
 // @description  Invoke https://fc-solve.shlomifish.org/js-fc-solve/text/ for the current board
 // @match        *://www.free-freecell-solitaire.com/bakers_game.html
 // @match        *://fc-solve.shlomifish.org/js-fc-solve/text/?deal_number=*
@@ -23,7 +23,7 @@
     if (location.href.startsWith(solver_href)) {
         run_solver();
     } else {
-        document.querySelector('button.start-new').addEventListener('click', () => {
+        $(".start-new").click(() => {
             setTimeout(
                 // () => start_solver()  // TODO: this solver don't have the game in localStorage yet. Force refresh instead?
                 () => location.reload()
