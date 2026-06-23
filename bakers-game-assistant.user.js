@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Baker's Game Assistant
-// @version      2026-06-13
+// @version      2026-06-22
 // @description  Invoke https://fc-solve.shlomifish.org/js-fc-solve/text/ for the current board
 // @match        *://www.free-freecell-solitaire.com/bakers_game.html
 // @match        *://fc-solve.shlomifish.org/js-fc-solve/text/?deal_number=*
@@ -34,16 +34,20 @@
 
     function run_solver() {
         // 1. click Solve (once available!)
+        const btn = document.getElementById("run_do_solve");
         const poll = setInterval(() => {
-            const btn = document.getElementById("run_do_solve");
-            try {
-                btn.onclick();
-                clearInterval(poll);
-                // 2. if unsolvable, close the solver tab (will re-activate game)
-                if (document.getElementById("fc_solve_status").className !== 'solved') {
-                    window.close();
-                }
-            } catch {}
+            const status = document.getElementById("fc_solve_status").className; // "not_started" "running" "" "impossible" "solved"
+            switch (status) {
+                case "not_started":
+                    try { btn.onclick(); } catch {} // throws if handler is not ready
+                    break;
+                case "impossible":
+                    // 2. if unsolvable, close the solver tab (will re-activate game)
+                    clearInterval(poll);
+                    window.close(); // eslint-disable-next-line no-fallthrough
+                case "solved":
+                    clearInterval(poll);
+            }
         }, 100);
     }
 
