@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Baker's Game Assistant
-// @version      2026-06-22
+// @version      2026-07-02
 // @description  Invoke https://fc-solve.shlomifish.org/js-fc-solve/text/ for the current board
 // @match        *://www.free-freecell-solitaire.com/bakers_game.html
 // @match        *://fc-solve.shlomifish.org/js-fc-solve/text/?deal_number=*
@@ -33,21 +33,18 @@
     }
 
     function run_solver() {
-        // 1. click Solve (once available!)
+        // 0. Watch for status change, close the solver tab (and return to the game) if unsolvable:
+        const statusSpan = document.getElementById("fc_solve_status"); // "not_started", "running", "", "impossible", "solved", ...?
+        const observer = new MutationObserver(() => { if (statusSpan.className === "impossible") { window.close(); } });
+        observer.observe(statusSpan, {attributes: true, attributeFilter: ['class']});
+
+        // 1. Click Solve (and wait for it to actually work!):
         const btn = document.getElementById("run_do_solve");
         const poll = setInterval(() => {
-            const status = document.getElementById("fc_solve_status").className; // "not_started" "running" "" "impossible" "solved"
-            switch (status) {
-                case "not_started":
-                    try { btn.onclick(); } catch {} // throws if handler is not ready
-                    break;
-                case "impossible":
-                    // 2. if unsolvable, close the solver tab (will re-activate game)
-                    clearInterval(poll);
-                    window.close(); // eslint-disable-next-line no-fallthrough
-                case "solved":
-                    clearInterval(poll);
-            }
+            try {
+                btn.onclick(); // throws if handler is not ready
+                clearInterval(poll);
+            } catch {}
         }, 100);
     }
 
