@@ -4,7 +4,7 @@
 // @updateURL    https://github.com/gerchikov/Tampermonkey-userscripts/raw/main/sudoku-game-assistant.user.js
 // @downloadURL  https://github.com/gerchikov/Tampermonkey-userscripts/raw/main/sudoku-game-assistant.user.js
 // @supportURL   https://github.com/gerchikov/Tampermonkey-userscripts/issues
-// @version      2026-07-23
+// @version      2026-07-24
 // @description  Adds an AutoClean control that repeatedly fills candidate values
 // @author       YDG
 // @match        *://www.sudoku9x9.com/*
@@ -17,20 +17,25 @@
     'use strict';
 
     function getGameState() {
-        return Array.from(document.querySelectorAll('p.nmleft'))
+        const digitCountSelector = "p.nmleft";
+        const digitCountElements = document.querySelectorAll(digitCountSelector);
+        if (!digitCountElements || digitCountElements.length !== 9) {
+            alert(`AutoClean detected a structural change:\n`
+                + `"${digitCountSelector}" not found for all nine digits.\n`
+                + `Please fix sudoku-game-assistant.user.js`);
+        }
+        return Array.from(digitCountElements)
             .map(el => el.textContent || '')
             .join('|');
     }
 
-    function runAutoClean() {
+    function runAutoClean(buttons) {
         let maxIterations = 50; // Safety limit against infinite loops
         let iterations = 0;
         let previousState = '';
 
         while (iterations < maxIterations) {
-            if (typeof convtp === 'function') convtp();
-            if (typeof clear_pencilmark === 'function') clear_pencilmark();
-            if (typeof fillallcells === 'function') fillallcells();
+            buttons.forEach(b => b.click());
 
             const currentState = getGameState();
 
@@ -49,8 +54,27 @@
         if (document.getElementById('custom-autoclean-btn')) return;
 
         // Target div#convbox directly
-        const convBoxElem = document.querySelector('div#convbox');
-        if (!convBoxElem) return;
+        const convBoxId = 'div#convbox';
+        const convBoxElem = document.querySelector(convBoxId);
+        if (!convBoxElem) {
+            alert(`AutoClean detected a structural change:\n`
+                + `"${convBoxId}" not found.\n`
+                + `Please fix sudoku-game-assistant.user.js`);
+            return;
+        }
+
+        // Target the UI elements directly
+        // Sequence: convtp -> clear_pencilmark -> fillallcells
+        const buttonIds = ['div#convp', 'div#cpencilpic', 'div#fillall'];
+        const buttons = buttonIds.map(id => document.querySelector(id));
+        buttons.forEach((b, i) => {
+            if (!b || typeof b.onclick !== 'function') {
+                alert(`AutoClean detected a structural change:\n`
+                      + `"${buttonIds[i]}" not found or has no click handler.\n`
+                      + `Please fix sudoku-game-assistant.user.js`);
+                return;
+            }
+        });
 
         // Create the custom control as a div element
         const btn = document.createElement('div');
@@ -85,7 +109,7 @@
 
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
-            runAutoClean();
+            runAutoClean(buttons);
         });
 
         // Insert directly after div#convbox
