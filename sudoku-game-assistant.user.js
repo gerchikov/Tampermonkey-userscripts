@@ -4,7 +4,7 @@
 // @updateURL    https://github.com/gerchikov/Tampermonkey-userscripts/raw/main/sudoku-game-assistant.user.js
 // @downloadURL  https://github.com/gerchikov/Tampermonkey-userscripts/raw/main/sudoku-game-assistant.user.js
 // @supportURL   https://github.com/gerchikov/Tampermonkey-userscripts/issues
-// @version      2026-07-24
+// @version      2026-07-25
 // @description  Adds an AutoClean control that repeatedly fills candidate values
 // @author       YDG
 // @match        *://www.sudoku9x9.com/*
@@ -23,6 +23,7 @@
             alert(`AutoClean detected a structural change:\n`
                 + `"${digitCountSelector}" not found for all nine digits.\n`
                 + `Please fix sudoku-game-assistant.user.js`);
+            throw new Error("AutoClean detected a structural change");
         }
         return Array.from(digitCountElements)
             .map(el => el.textContent || '')
@@ -67,14 +68,13 @@
         // Sequence: convtp -> clear_pencilmark -> fillallcells
         const buttonIds = ['div#convp', 'div#cpencilpic', 'div#fillall'];
         const buttons = buttonIds.map(id => document.querySelector(id));
-        buttons.forEach((b, i) => {
-            if (!b || typeof b.onclick !== 'function') {
-                alert(`AutoClean detected a structural change:\n`
-                      + `"${buttonIds[i]}" not found or has no click handler.\n`
-                      + `Please fix sudoku-game-assistant.user.js`);
-                return;
-            }
-        });
+        const missingIndex = buttons.findIndex(b => !b || typeof b.onclick !== 'function');
+        if (missingIndex !== -1) {
+            alert(`AutoClean detected a structural change:\n` +
+                  `"${buttonIds[missingIndex]}" not found or has no click handler.\n` +
+                  `Please fix sudoku-game-assistant.user.js`);
+            return;
+        }
 
         // Create the custom control as a div element
         const btn = document.createElement('div');
