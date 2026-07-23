@@ -4,7 +4,7 @@
 // @updateURL    https://github.com/gerchikov/Tampermonkey-userscripts/raw/main/sudoku-game-assistant.user.js
 // @downloadURL  https://github.com/gerchikov/Tampermonkey-userscripts/raw/main/sudoku-game-assistant.user.js
 // @supportURL   https://github.com/gerchikov/Tampermonkey-userscripts/issues
-// @version      2026-07-25
+// @version      2026-07-26
 // @description  Adds an AutoClean control that repeatedly fills candidate values
 // @author       YDG
 // @match        *://www.sudoku9x9.com/*
@@ -16,8 +16,7 @@
 (function() {
     'use strict';
 
-    function getGameState() {
-        const digitCountSelector = "p.nmleft";
+    function getGameState(digitCountSelector = "p.nmleft") {
         const digitCountElements = document.querySelectorAll(digitCountSelector);
         if (!digitCountElements || digitCountElements.length !== 9) {
             alert(`AutoClean detected a structural change:\n`
@@ -30,32 +29,26 @@
             .join('|');
     }
 
-    function runAutoClean(buttons) {
-        let maxIterations = 50; // Safety limit against infinite loops
-        let iterations = 0;
+    function runAutoClean(buttons, maxIterations = 50) {
         let previousState = '';
 
-        while (iterations < maxIterations) {
+        for (let iterations = 0; iterations < maxIterations; iterations++) {
             buttons.forEach(b => b.click());
 
             const currentState = getGameState();
-
             // Stop if the game state did not change in this iteration
             if (currentState === previousState) {
                 console.log(`AutoClean finished after ${iterations} iterations (no further changes).`);
                 break;
             }
-
             previousState = currentState;
-            iterations++;
         }
     }
 
-    function addAutoCleanButton() {
+    function addAutoCleanButton(convBoxId = 'div#convbox', buttonIds = ['div#convp', 'div#cpencilpic', 'div#fillall']) {
         if (document.getElementById('custom-autoclean-btn')) return;
 
         // Target div#convbox directly
-        const convBoxId = 'div#convbox';
         const convBoxElem = document.querySelector(convBoxId);
         if (!convBoxElem) {
             alert(`AutoClean detected a structural change:\n`
@@ -66,8 +59,12 @@
 
         // Target the UI elements directly
         // Sequence: convtp -> clear_pencilmark -> fillallcells
-        const buttonIds = ['div#convp', 'div#cpencilpic', 'div#fillall'];
         const buttons = buttonIds.map(id => document.querySelector(id));
+
+        // The following check will break (give a false positive)
+        // if the site ever changes to wire up its buttons with `addEventListener('click', ...)`
+        // instead of `onclick = ...`. If it does, drop the "function-ness" part of the check,
+        // as there is no reliable way to introspect addEventListener-bound handlers.
         const missingIndex = buttons.findIndex(b => !b || typeof b.onclick !== 'function');
         if (missingIndex !== -1) {
             alert(`AutoClean detected a structural change:\n` +
