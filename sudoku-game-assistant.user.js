@@ -4,7 +4,7 @@
 // @updateURL    https://github.com/gerchikov/Tampermonkey-userscripts/raw/main/sudoku-game-assistant.user.js
 // @downloadURL  https://github.com/gerchikov/Tampermonkey-userscripts/raw/main/sudoku-game-assistant.user.js
 // @supportURL   https://github.com/gerchikov/Tampermonkey-userscripts/issues
-// @version      2026-07-26
+// @version      2026-07-27
 // @description  Adds an AutoClean control that repeatedly fills candidate values
 // @author       YDG
 // @match        *://www.sudoku9x9.com/*
@@ -51,9 +51,8 @@
         // Target div#convbox directly
         const convBoxElem = document.querySelector(convBoxId);
         if (!convBoxElem) {
-            alert(`AutoClean detected a structural change:\n`
-                + `"${convBoxId}" not found.\n`
-                + `Please fix sudoku-game-assistant.user.js`);
+            console.warn(`AutoClean not added:\n`
+                       + `"${convBoxId}" not found.`);
             return;
         }
 
@@ -67,9 +66,8 @@
         // as there is no reliable way to introspect addEventListener-bound handlers.
         const missingIndex = buttons.findIndex(b => !b || typeof b.onclick !== 'function');
         if (missingIndex !== -1) {
-            alert(`AutoClean detected a structural change:\n` +
-                  `"${buttonIds[missingIndex]}" not found or has no click handler.\n` +
-                  `Please fix sudoku-game-assistant.user.js`);
+            console.warn(`AutoClean not added:\n`
+                       + `"${buttonIds[missingIndex]}" not found or has no click handler.`);
             return;
         }
 
